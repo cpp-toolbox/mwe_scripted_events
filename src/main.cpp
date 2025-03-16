@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 
     std::string scripted_event_json_path = normalize_path_for_os("assets/animations/shotgun_fire.json");
     ScriptedEvent shotgun_fire_se(scripted_event_json_path);
-    std::unordered_map<std::string, std::function<void(bool, bool)>> event_callbacks = {
+    std::unordered_map<std::string, std::function<void(bool, bool)>> shotgun_ec = {
         {"shotgun_blast",
          [&](bool first_call, bool second_call) { sound_system.queue_sound(SoundType::SHOTGUN_FIRE, glm::vec3(0)); }},
         {"holster",
@@ -107,7 +107,11 @@ int main(int argc, char *argv[]) {
     auto ivpntprs = texture_packer_model_loading::convert_ivpntr_to_ivpntpr(ivpntrs, texture_packer);
 
     double current_animation_time = 0;
-    bool animation_is_playing = false;
+    bool restart_fire = false;
+    bool fire_playing = false;
+
+    bool restart_equip = false;
+    bool equip_playing = false;
 
     std::function<void(double)> tick = [&](double dt) {
         /*glfwGetFramebufferSize(window, &width, &height);*/
@@ -121,8 +125,20 @@ int main(int argc, char *argv[]) {
                                  input_state.is_pressed(EKey::s), input_state.is_pressed(EKey::d),
                                  input_state.is_pressed(EKey::SPACE), input_state.is_pressed(EKey::LEFT_SHIFT), dt);
 
-        if (input_state.is_just_pressed(EKey::p)) {
-            animation_is_playing = not animation_is_playing;
+        if (input_state.is_just_pressed(EKey::LEFT_MOUSE_BUTTON)) {
+            restart_fire = true;
+            fire_playing = true;
+
+            restart_equip = false;
+            equip_playing = false;
+        }
+
+        if (input_state.is_just_pressed(EKey::q)) {
+            restart_equip = true;
+            equip_playing = true;
+
+            restart_fire = false;
+            fire_playing = false;
         }
 
         shader_cache.set_uniform(
@@ -137,7 +153,17 @@ int main(int argc, char *argv[]) {
 
         // first we upload the animation matrix
         std::vector<glm::mat4> bone_transformations;
-        rirc.set_bone_transforms(current_animation_time, bone_transformations, "fire");
+        if (fire_playing) {
+            if (restart_fire) {
+                shotgun_fire_se.reset_processed_state();
+            }
+            rirc.set_bone_transforms(dt, bone_transformations, "fire", false, restart_fire);
+            shotgun_fire_se.run(dt, shotgun_ec);
+            restart_fire = false;
+        } else if (equip_playing) {
+            rirc.set_bone_transforms(dt, bone_transformations, "equip", false, restart_equip);
+            restart_equip = false;
+        }
 
         const unsigned int MAX_BONES_TO_BE_USED = 100;
         ShaderProgramInfo shader_info = shader_cache.get_shader_program(
@@ -195,9 +221,7 @@ int main(int argc, char *argv[]) {
         glfwSwapBuffers(window.glfw_window);
         glfwPollEvents();
 
-        if (animation_is_playing) {
-            current_animation_time += dt;
-            shotgun_fire_se.run_scripted_events(current_animation_time, event_callbacks);
+        if (fire_playing) {
         }
 
         sound_system.play_all_sounds();
