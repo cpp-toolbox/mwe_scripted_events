@@ -14,7 +14,10 @@
 #include "utility/fixed_frequency_loop/fixed_frequency_loop.hpp"
 #include "utility/resource_path/resource_path.hpp"
 
+#include "sound/sound_system/sound_system.hpp"
+
 #include "graphics/rigged_model_loading/rigged_model_loading.hpp"
+#include "graphics/scripted_events/scripted_scene_manager.hpp"
 #include "graphics/vertex_geometry/vertex_geometry.hpp"
 #include "graphics/shader_standard/shader_standard.hpp"
 #include "graphics/texture_packer/texture_packer.hpp"
@@ -31,6 +34,10 @@
 #include <vector>
 
 int main(int argc, char *argv[]) {
+
+    std::unordered_map<SoundType, std::string> sound_type_to_file = {{SoundType::SHOTGUN_FIRE, "FILL ME IN"}};
+
+    SoundSystem sound_system(100, sound_type_to_file);
 
     ResourcePath rp(false);
 

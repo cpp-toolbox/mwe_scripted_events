@@ -82,3 +82,9 @@
 [submodule "src/utility/print_utils"]
 	path = src/utility/print_utils
 	url = git@github.com:cpp-toolbox/print_utils.git
+[submodule "src/graphics/scripted_events"]
+	path = src/graphics/scripted_events
+	url = git@github.com:cpp-toolbox/scripted_events.git
+[submodule "src/sound/sound_system"]
+	path = src/sound/sound_system
+	url = git@github.com:cpp-toolbox/sound_system.git
