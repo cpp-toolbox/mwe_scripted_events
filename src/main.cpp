@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     SoundSystem sound_system(100, sound_type_to_file);
 
     std::string scripted_event_json_path = normalize_path_for_os("assets/animations/shotgun_fire.json");
-    ScriptedEvent scripted_event(scripted_event_json_path);
+    ScriptedEvent shotgun_fire_se(scripted_event_json_path);
     std::unordered_map<std::string, std::function<void(bool, bool)>> event_callbacks = {
         {"shotgun_blast",
          [&](bool first_call, bool second_call) { sound_system.queue_sound(SoundType::SHOTGUN_FIRE, glm::vec3(0)); }},
@@ -197,7 +197,7 @@ int main(int argc, char *argv[]) {
 
         if (animation_is_playing) {
             current_animation_time += dt;
-            scripted_event.run_scripted_events(current_animation_time, event_callbacks);
+            shotgun_fire_se.run_scripted_events(current_animation_time, event_callbacks);
         }
 
         sound_system.play_all_sounds();
