@@ -1,0 +1,3 @@
+Time (s)	Marker Name
+0.12	*shotgun_blast
+0.42	*holster

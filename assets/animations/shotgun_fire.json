@@ -1,0 +1,14 @@
+{
+    "events": [
+        {
+            "name": "shotgun_blast",
+            "time": 0.1,
+            "type": "playthrough"
+        },
+        {
+            "name": "holster",
+            "time": 0.4,
+            "type": "playthrough"
+        }
+    ]
+}
