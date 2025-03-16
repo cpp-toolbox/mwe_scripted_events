@@ -13,6 +13,7 @@
 #include "utility/texture_packer_model_loading/texture_packer_model_loading.hpp"
 #include "utility/fixed_frequency_loop/fixed_frequency_loop.hpp"
 #include "utility/resource_path/resource_path.hpp"
+#include "utility/fs_utils/fs_utils.hpp"
 
 #include "sound/sound_system/sound_system.hpp"
 
@@ -35,9 +36,21 @@
 
 int main(int argc, char *argv[]) {
 
-    std::unordered_map<SoundType, std::string> sound_type_to_file = {{SoundType::SHOTGUN_FIRE, "FILL ME IN"}};
+    std::unordered_map<SoundType, std::string> sound_type_to_file = {
+        {SoundType::SHOTGUN_FIRE, normalize_path_for_os("assets/sounds/shotgun_blast.wav")},
+        {SoundType::HOLSTER, normalize_path_for_os("assets/sounds/holster.wav")},
+    };
 
     SoundSystem sound_system(100, sound_type_to_file);
+
+    std::string scripted_event_json_path = normalize_path_for_os("assets/animations/shotgun_fire.json");
+    ScriptedEvent scripted_event(scripted_event_json_path);
+    std::unordered_map<std::string, std::function<void(bool, bool)>> event_callbacks = {
+        {"shotgun_blast",
+         [&](bool first_call, bool second_call) { sound_system.queue_sound(SoundType::SHOTGUN_FIRE, glm::vec3(0)); }},
+        {"holster",
+         [&](bool first_call, bool second_call) { sound_system.queue_sound(SoundType::HOLSTER, glm::vec3(0)); }},
+    };
 
     ResourcePath rp(false);
 
@@ -87,7 +100,7 @@ int main(int argc, char *argv[]) {
 
     glm::mat4 identity = glm::mat4(1);
 
-    std::string path = (argc > 1) ? argv[1] : "assets/animations/sniper_rifle_with_hands.fbx";
+    std::string path = "assets/animations/shotgun_with_hands.fbx";
 
     rigged_model_loading::RecIvpntRiggedCollector rirc;
     auto ivpntrs = rirc.parse_model_into_ivpntrs(rp.gfp(path).string());
@@ -184,7 +197,10 @@ int main(int argc, char *argv[]) {
 
         if (animation_is_playing) {
             current_animation_time += dt;
+            scripted_event.run_scripted_events(current_animation_time, event_callbacks);
         }
+
+        sound_system.play_all_sounds();
 
         TemporalBinarySignal::process_all();
     };
