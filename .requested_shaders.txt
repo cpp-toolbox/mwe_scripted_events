@@ -1,0 +1,1 @@
+texture_packer_rigged_and_animated_cwl_v_transformation_ubos_1024_with_textures
