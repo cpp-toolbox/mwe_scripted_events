@@ -156,7 +156,7 @@ int main(int argc, char *argv[]) {
         // first we upload the animation matrix
         std::vector<glm::mat4> bone_transformations;
         if (fire_playing->get()) {
-            if (restart_fire) {
+            if (restart_fire->get()) {
                 shotgun_fire_se.reset_processed_state();
             }
             rirc.set_bone_transforms(dt, bone_transformations, "fire", false, restart_fire->get());
