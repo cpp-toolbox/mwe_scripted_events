@@ -13,6 +13,8 @@
 #include "utility/texture_packer_model_loading/texture_packer_model_loading.hpp"
 #include "utility/fixed_frequency_loop/fixed_frequency_loop.hpp"
 #include "utility/resource_path/resource_path.hpp"
+#include "utility/print_utils/print_utils.hpp"
+#include "utility/bool_mutex/bool_mutex.hpp"
 #include "utility/fs_utils/fs_utils.hpp"
 
 #include "sound/sound_system/sound_system.hpp"
@@ -107,11 +109,17 @@ int main(int argc, char *argv[]) {
     auto ivpntprs = texture_packer_model_loading::convert_ivpntr_to_ivpntpr(ivpntrs, texture_packer);
 
     double current_animation_time = 0;
-    bool restart_fire = false;
-    bool fire_playing = false;
 
-    bool restart_equip = false;
-    bool equip_playing = false;
+    BoolMutex scripted_event_bm;
+
+    auto restart_fire = scripted_event_bm.create();
+    auto fire_playing = scripted_event_bm.create();
+
+    auto restart_equip = scripted_event_bm.create();
+    auto equip_playing = scripted_event_bm.create();
+
+    scripted_event_bm.add_exclusion(restart_fire, restart_equip);
+    scripted_event_bm.add_exclusion(fire_playing, equip_playing);
 
     std::function<void(double)> tick = [&](double dt) {
         /*glfwGetFramebufferSize(window, &width, &height);*/
@@ -126,19 +134,13 @@ int main(int argc, char *argv[]) {
                                  input_state.is_pressed(EKey::SPACE), input_state.is_pressed(EKey::LEFT_SHIFT), dt);
 
         if (input_state.is_just_pressed(EKey::LEFT_MOUSE_BUTTON)) {
-            restart_fire = true;
-            fire_playing = true;
-
-            restart_equip = false;
-            equip_playing = false;
+            restart_fire->set(true);
+            fire_playing->set(true);
         }
 
         if (input_state.is_just_pressed(EKey::q)) {
-            restart_equip = true;
-            equip_playing = true;
-
-            restart_fire = false;
-            fire_playing = false;
+            restart_equip->set(true);
+            equip_playing->set(true);
         }
 
         shader_cache.set_uniform(
@@ -153,16 +155,18 @@ int main(int argc, char *argv[]) {
 
         // first we upload the animation matrix
         std::vector<glm::mat4> bone_transformations;
-        if (fire_playing) {
+        if (fire_playing->get()) {
             if (restart_fire) {
                 shotgun_fire_se.reset_processed_state();
             }
-            rirc.set_bone_transforms(dt, bone_transformations, "fire", false, restart_fire);
+            rirc.set_bone_transforms(dt, bone_transformations, "fire", false, restart_fire->get());
+            p("fire playing");
             shotgun_fire_se.run(dt, shotgun_ec);
-            restart_fire = false;
+            restart_fire->set(false);
         } else if (equip_playing) {
-            rirc.set_bone_transforms(dt, bone_transformations, "equip", false, restart_equip);
-            restart_equip = false;
+            p("equip playing");
+            rirc.set_bone_transforms(dt, bone_transformations, "equip", false, restart_equip->get());
+            restart_equip->set(false);
         }
 
         const unsigned int MAX_BONES_TO_BE_USED = 100;
