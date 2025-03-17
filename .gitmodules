@@ -88,3 +88,6 @@
 [submodule "src/sound/sound_system"]
 	path = src/sound/sound_system
 	url = git@github.com:cpp-toolbox/sound_system.git
+[submodule "src/utility/bool_mutex"]
+	path = src/utility/bool_mutex
+	url = git@github.com:cpp-toolbox/bool_mutex.git
